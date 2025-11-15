@@ -82,7 +82,8 @@ npm install
 # Run development server
 npm run dev
 
-##  API Documentation
+
+VI. API Documentation
 # Authentication Endpoints
 
 | Method | Endpoint        | Description           | Auth Required |
