@@ -45,6 +45,7 @@ COPY --from=builder /usr/bin/composer /usr/bin/composer
 COPY ./deploy/nginx.conf /etc/nginx/sites-available/default
 COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+
 # Expose HTTP port
 EXPOSE 80
 
