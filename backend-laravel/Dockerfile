@@ -1,24 +1,23 @@
 # ----------- Build Stage -----------
 FROM php:8.2-fpm AS builder
 
-# Install system dependencies INCLUDING libpq-dev
 RUN apt-get update && apt-get install -y \
     git unzip libzip-dev libpng-dev libonig-dev libxml2-dev zlib1g-dev curl libpq-dev
 
 RUN docker-php-ext-configure zip
-
-# Install PHP extensions (PostgreSQL requires libpq-dev)
 RUN docker-php-ext-install pdo pdo_pgsql pgsql zip mbstring exif pcntl bcmath
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
+# Copy FULL project FIRST (so artisan exists)
 COPY . .
 
+# Now install dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+# Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 
@@ -26,7 +25,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 # ----------- Production Stage -----------
 FROM php:8.2-fpm
 
-# Install Nginx, Supervisor and PostgreSQL dependencies
 RUN apt-get update && apt-get install -y \
     nginx supervisor curl libzip-dev libpng-dev libonig-dev libxml2-dev zlib1g-dev libpq-dev
 
