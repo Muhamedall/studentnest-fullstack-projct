@@ -44,6 +44,7 @@ COPY ./deploy/nginx.conf /etc/nginx/sites-available/default
 COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./deploy/php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 
+
 EXPOSE 80
 
 CMD ["/usr/bin/supervisord", "-n"]
