@@ -5,7 +5,7 @@ FROM php:8.2-fpm AS builder
 RUN apt-get update && apt-get install -y \
     git unzip libzip-dev libpng-dev libonig-dev libxml2-dev zlib1g-dev curl libpq-dev
 
-# Install PHP extensions: replace pdo_mysql with pdo_pgsql
+# Install PHP extensions (using PostgreSQL)
 RUN docker-php-ext-configure zip
 RUN docker-php-ext-install pdo pdo_pgsql zip mbstring exif pcntl bcmath
 
@@ -14,11 +14,11 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy composer files and install dependencies (no dev)
+# Copy composer files and install dependencies
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
-# Copy app files
+# Copy full application
 COPY . .
 
 # Fix permissions for Laravel
@@ -31,22 +31,22 @@ FROM php:8.2-fpm
 RUN apt-get update && apt-get install -y \
     nginx supervisor curl libzip-dev libpng-dev libonig-dev libxml2-dev zlib1g-dev libpq-dev
 
-# Install PHP extensions: replace pdo_mysql with pdo_pgsql
+# Install PostgreSQL PHP extension
 RUN docker-php-ext-configure zip
 RUN docker-php-ext-install pdo pdo_pgsql zip mbstring exif pcntl bcmath
 
 WORKDIR /var/www/html
 
-# Copy app and composer from builder
+# Copy built app
 COPY --from=builder /var/www/html /var/www/html
 COPY --from=builder /usr/bin/composer /usr/bin/composer
 
-# Copy Nginx and Supervisor configuration files (adjust paths if needed)
+# Nginx + Supervisor configs
 COPY ./deploy/nginx.conf /etc/nginx/sites-available/default
 COPY ./deploy/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose HTTP port
 EXPOSE 80
 
-# Start Supervisor to manage PHP-FPM and Nginx
+# Start Supervisor (no daemon)
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
