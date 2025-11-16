@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-configure zip
 RUN docker-php-ext-install pdo pdo_pgsql pgsql zip mbstring exif pcntl bcmath
+RUN mkdir -p /var/log && touch /var/log/php-fpm.log && chown www-data:www-data /var/log/php-fpm.log
+
 
 WORKDIR /var/www/html
 
