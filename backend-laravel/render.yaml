@@ -6,13 +6,23 @@ services:
     branch: main
     plan: starter
     dockerfilePath: Dockerfile
+    buildCommand: ""       # Docker handles build
+    startCommand: ""       # Docker CMD used (supervisor starts nginx+php-fpm)
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: 'false'
-    buildCommand: ""
-    startCommand: ""   # Docker CMD from image will be used
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase: studentnest-db
+      - key: DB_DATABASE
+        fromDatabase: studentnest-db
+      - key: DB_USERNAME
+        fromDatabase: studentnest-db
+      - key: DB_PASSWORD
+        fromDatabase: studentnest-db
 
   - type: worker
     name: studentnest-worker
@@ -20,11 +30,25 @@ services:
     repo: https://github.com/Muhamedall/studentnest-fullstack-projct
     branch: main
     plan: starter
-    dockerfilePath: Dockerfile
-    startCommand: "php artisan queue:work --sleep=3 --tries=3 --timeout=90"
+    dockerfilePath: Dockerfile.worker     # <— FIXED
+    startCommand: ""                      # Docker CMD will start queue worker
     envVars:
       - key: QUEUE_CONNECTION
         value: database
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: studentnest-web             # uses same APP_KEY
+      - key: DB_HOST
+        fromDatabase: studentnest-db
+      - key: DB_DATABASE
+        fromDatabase: studentnest-db
+      - key: DB_USERNAME
+        fromDatabase: studentnest-db
+      - key: DB_PASSWORD
+        fromDatabase: studentnest-db
 
 databases:
   - name: studentnest-db
