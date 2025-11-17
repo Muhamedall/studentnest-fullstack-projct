@@ -14,7 +14,7 @@ class EtudiantController extends Controller
         $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:etudiants'], // Adjust table name if necessary
-            'password' => ['required', 'string', 'min:8'], // Adjust password complexity rules
+           $validatedData['password'] = Hash::make($validatedData['password']),
             'dateOfBirth' => ['required', 'date'],
             'city' => ['required', 'string', 'max:255'],
         ]);
