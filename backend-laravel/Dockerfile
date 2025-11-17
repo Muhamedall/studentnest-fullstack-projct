@@ -1,50 +1,22 @@
-# Stage 1: build + composer
-FROM php:8.2-fpm AS base
+FROM richarvey/nginx-php-fpm:3.1.6
 
-# system deps
-RUN apt-get update && apt-get install -y \
-    git zip unzip libpq-dev libonig-dev libzip-dev curl nginx supervisor \
-    && docker-php-ext-install pdo pdo_pgsql mbstring zip
+WORKDIR /var/www/html
 
-# install composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-WORKDIR /var/www
-
-# Copy full application first
+# Copy all files including .env (make sure your .env is set properly in Render env vars)
 COPY . .
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction
 
-# build frontend if present (optional)
+# Build frontend assets if package.json exists (optional)
 RUN if [ -f package.json ]; then npm ci && npm run build; fi
 
-# artisan optimizations
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
-RUN php artisan view:cache || true
+# Set correct permissions for Laravel storage and cache folders
+RUN chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
-# Stage 2: production image with nginx + php-fpm
-FROM php:8.2-fpm
+# Laravel public directory (default for richarvey image)
+ENV WEBROOT=/var/www/html/public
 
-# runtime packages
-RUN apt-get update && apt-get install -y nginx supervisor libpq5
-
-WORKDIR /var/www
-
-# copy built app
-COPY --from=base /var/www /var/www
-
-# permissions
-RUN chown -R www-data:www-data storage bootstrap/cache
-
-# nginx config
-COPY docker/nginx/default.conf /etc/nginx/sites-available/default
-
-# supervisor config
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
+# Expose port 80
 EXPOSE 80
-
-CMD ["/usr/bin/supervisord", "-n"]
