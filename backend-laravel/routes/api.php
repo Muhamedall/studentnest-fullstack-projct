@@ -3,10 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\EtudiantControlloller;
+use App\Http\Controllers\EtudiantController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ListingController;
-use App\Http\Controllers\CommentsController;
+use App\Http\Controllers\CommentController;
 
 /*
 |--------------------------------------------------------------------------
