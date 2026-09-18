@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../api/api';
 import { FaEdit, FaTrash, FaComments, FaCalendarAlt } from 'react-icons/fa';
+import { formatPrice } from '../../utils/formatPrice';
 import EditListing from './EditListing';
 import ViewComments from './ViewComments';
 import ViewReservations from './ViewReservations';
-import { useSelector } from 'react-redux';
 
 const ManageListings = () => {
-  const user = useSelector((state) => state.users.user);
-
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedListing, setSelectedListing] = useState(null);
@@ -19,13 +17,8 @@ const ManageListings = () => {
   useEffect(() => {
     const fetchListings = async () => {
       try {
-        // Fetch all listings
-        const response = await axios.get('http://localhost:8000/api/dataListings');
-        
-        // Filter listings by the logged-in user's ID
-        const userSpecificListings = response.data.filter(listing => listing.user_id === user.id);
-
-        setListings(userSpecificListings);
+        const response = await axios.get('/api/my-listings');
+        setListings(response.data);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching listings:', error);
@@ -34,11 +27,11 @@ const ManageListings = () => {
     };
 
     fetchListings();
-  }, [user.id]);
+  }, []);
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8000/api/listings/${id}`);
+      await axios.delete(`/api/listings/${id}`);
       setListings(listings.filter(listing => listing.id !== id));
     } catch (error) {
       console.error('Error deleting listing:', error);
@@ -61,52 +54,67 @@ const ManageListings = () => {
   };
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Manage Listings</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Manage Listings</h2>
+      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Edit, delete or view details of your published listings.</p>
       {loading ? (
-        <p className="text-gray-600 dark:text-gray-300">Loading listings...</p>
+        <div className="flex items-center justify-center py-16">
+          <span className="h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : listings.length === 0 ? (
+        <div className="py-16 text-center">
+          <p className="text-gray-500 dark:text-gray-400">You don&apos;t have any listings yet.</p>
+        </div>
       ) : (
-        <div className="overflow-x-auto mt-4">
-          <table className="min-w-full bg-white dark:bg-gray-800">
+        <div className="overflow-x-auto mt-6">
+          <table className="min-w-full">
             <thead>
-              <tr>
-                <th className="py-2 px-4 bg-gray-200 dark:bg-gray-700 text-left text-gray-600 dark:text-white">Title</th>
-                <th className="py-2 px-4 bg-gray-200 dark:bg-gray-700 text-left text-gray-600 dark:text-white">Location</th>
-                <th className="py-2 px-4 bg-gray-200 dark:bg-gray-700 text-left text-gray-600 dark:text-white">Price</th>
-                <th className="py-2 px-4 bg-gray-200 dark:bg-gray-700 text-left text-gray-600 dark:text-white">Actions</th>
+              <tr className="bg-gray-50 dark:bg-gray-700/50">
+                <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300">Title</th>
+                <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300">Location</th>
+                <th className="py-3 px-4 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300">Price</th>
+                <th className="py-3 px-4 text-right text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
               </tr>
             </thead>
             <tbody>
               {listings.map(listing => (
-                <tr key={listing.id} className="border-b border-gray-200 dark:border-gray-700">
-                  <td className="py-2 px-4 text-gray-800 dark:text-white">{listing.title}</td>
-                  <td className="py-2 px-4 text-gray-800 dark:text-white">{listing.location}</td>
-                  <td className="py-2 px-4 text-gray-800 dark:text-white">{listing.price} MAD</td>
-                  <td className="py-2 px-4 text-gray-800 dark:text-white">
-                    <button
-                      onClick={() => handleEdit(listing)}
-                      className="mr-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-700"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(listing.id)}
-                      className="mr-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700"
-                    >
-                      <FaTrash />
-                    </button>
-                    <button
-                      onClick={() => handleViewComments(listing)}
-                      className="mr-2 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-700"
-                    >
-                      <FaComments />
-                    </button>
-                    <button
-                      onClick={() => handleViewReservations(listing)}
-                      className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-700"
-                    >
-                      <FaCalendarAlt />
-                    </button>
+                <tr key={listing.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                  <td className="py-3 px-4 font-semibold text-gray-800 dark:text-white">{listing.title}</td>
+                  <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{listing.location}</td>
+                  <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
+                    {formatPrice(listing.price)} MAD
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => handleEdit(listing)}
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
+                        title="Edit"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(listing.id)}
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
+                        title="Delete"
+                      >
+                        <FaTrash />
+                      </button>
+                      <button
+                        onClick={() => handleViewComments(listing)}
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors"
+                        title="Comments"
+                      >
+                        <FaComments />
+                      </button>
+                      <button
+                        onClick={() => handleViewReservations(listing)}
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-colors"
+                        title="Reservations"
+                      >
+                        <FaCalendarAlt />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

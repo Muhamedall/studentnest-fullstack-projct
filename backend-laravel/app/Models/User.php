@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -46,12 +47,34 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    public function commenter()
+
+    public function comments(): HasMany
     {
-        return $this->hasMany(Commenter::class);
+        return $this->hasMany(Comment::class);
     }
-    public function wishlest(): HasMany
+
+    public function wishlists(): HasMany
     {
-        return $this->hasMany(Wishlest::class);
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function listings(): HasMany
+    {
+        return $this->hasMany(Listing::class);
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 }

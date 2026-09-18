@@ -11,12 +11,12 @@ class DatabaseSeeder extends Seeder
     {
         \App\Models\User::factory(10)->create();
 
-         \App\Models\User::factory()->create([
+        \App\Models\User::factory()->create([
             'name' => 'Mohamed Allaoui',
-             'email' => 'mohamedallaoui@gmail.com',
-             'password'=>'123456789',
-             'dateOfBirth'=>'2004-05-05', // Date format corrected
-             'city'=>'Tanger',
+            'email' => 'mohamedallaoui@gmail.com',
+            'password' => '123456789',
+            'dateOfBirth' => '2004-05-05', // Date format corrected
+            'city' => 'Tanger',
         ]);
     }
 }

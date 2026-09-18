@@ -7,10 +7,10 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Sanctum\HasApiTokens;
+
 class AuthenticatedSessionController extends Controller
 {
-    use HasApiTokens;
+
     /**
      * Handle an incoming authentication request.
      */

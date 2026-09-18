@@ -9,7 +9,7 @@ class Comment extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['listing_id', 'user_id', 'text'];
+    protected $fillable = ['listing_id', 'user_id', 'text', 'parent_id'];
 
     public function user()
     {
@@ -19,5 +19,10 @@ class Comment extends Model
     public function listing()
     {
         return $this->belongsTo(Listing::class);
+    }
+
+    public function getUserNameAttribute(): ?string
+    {
+        return $this->user?->name;
     }
 }

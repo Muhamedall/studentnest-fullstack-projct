@@ -1,45 +1,41 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from '../../api/api';
 
-const loadFromLocalStorage = (userId) => {
-    try {
-        const serializedState = localStorage.getItem(`favories_${userId}`);
-        if (serializedState === null) {
-            return [];
+export const fetchWishlist = createAsyncThunk(
+    'wishlests/fetchWishlist',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axios.get('/api/wishlist');
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch wishlist');
         }
-        return JSON.parse(serializedState);
-    } catch (err) {
-        return [];
     }
-};
+);
 
-const saveToLocalStorage = (userId, state) => {
-    try {
-        const serializedState = JSON.stringify(state);
-        localStorage.setItem(`favories_${userId}`, serializedState);
-    } catch (err) {
-        console.error('Error saving to local storage:', err);
-    }
-};
-
-const loadNumberFavoriesFromLocalStorage = (userId) => {
-    try {
-        const serializedState = localStorage.getItem(`numberFavories_${userId}`);
-        if (serializedState === null) {
-            return 0;
+export const addWishlistItem = createAsyncThunk(
+    'wishlests/addWishlistItem',
+    async (listingId, { rejectWithValue }) => {
+        try {
+            const response = await axios.post('/api/wishlist', { listing_id: listingId });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to add to wishlist');
         }
-        return parseInt(serializedState, 10);
-    } catch (err) {
-        return 0;
     }
-};
+);
 
-const saveNumberFavoriesToLocalStorage = (userId, numberFavories) => {
-    try {
-        localStorage.setItem(`numberFavories_${userId}`, numberFavories.toString());
-    } catch (err) {
-        console.error('Error saving numberFavories to local storage:', err);
+export const removeWishlistItem = createAsyncThunk(
+    'wishlests/removeWishlistItem',
+    async (listingId, { rejectWithValue }) => {
+        try {
+            await axios.delete(`/api/wishlist/${listingId}`);
+            return listingId;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to remove from wishlist');
+        }
     }
-};
+);
 
 const initialState = {
     favories: [],
@@ -52,37 +48,45 @@ const wishlestSlice = createSlice({
     name: 'wishlests',
     initialState,
     reducers: {
-        initializeWishlest: (state, action) => {
-            const userId = action.payload;
-            state.favories = loadFromLocalStorage(userId);
-            state.numberFavories = loadNumberFavoriesFromLocalStorage(userId);
+        clearWishlist: (state) => {
+            state.favories = [];
+            state.numberFavories = 0;
         },
-        addWishlest: (state, action) => {
-            const userId = action.payload.userId;
-            const item = action.payload.item;
-
-            if (!Array.isArray(state.favories)) {
-                state.favories = [];
-            }
-            const existingItem = state.favories.find(fav => fav.id === item.id);
-            if (!existingItem) {
-                state.favories.push(item);
-                saveToLocalStorage(userId, state.favories);
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchWishlist.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchWishlist.fulfilled, (state, action) => {
+                state.loading = false;
+                state.favories = action.payload.map(item => ({
+                    ...item.listing,
+                    wishlistId: item.id,
+                }));
                 state.numberFavories = state.favories.length;
-                saveNumberFavoriesToLocalStorage(userId, state.numberFavories);
-            }
-        },
-        removeWishlest: (state, action) => {
-            const userId = action.payload.userId;
-            const itemId = action.payload.itemId;
-
-            state.favories = state.favories.filter(fav => fav.id !== itemId);
-            saveToLocalStorage(userId, state.favories);
-            state.numberFavories = state.favories.length;
-            saveNumberFavoriesToLocalStorage(userId, state.numberFavories);
-        },
+            })
+            .addCase(fetchWishlist.rejected, (state) => {
+                state.loading = false;
+            })
+            .addCase(addWishlistItem.fulfilled, (state, action) => {
+                const item = action.payload;
+                const exists = state.favories.some(f => f.id === item.listing_id);
+                if (!exists) {
+                    state.favories.push({
+                        ...item.listing,
+                        wishlistId: item.id,
+                    });
+                    state.numberFavories = state.favories.length;
+                }
+            })
+            .addCase(removeWishlistItem.fulfilled, (state, action) => {
+                const listingId = action.payload;
+                state.favories = state.favories.filter(fav => fav.id !== listingId);
+                state.numberFavories = state.favories.length;
+            });
     },
 });
 
-export const { addWishlest, removeWishlest, initializeWishlest } = wishlestSlice.actions;
+export const { clearWishlist } = wishlestSlice.actions;
 export default wishlestSlice.reducer;

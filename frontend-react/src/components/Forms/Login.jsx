@@ -1,8 +1,10 @@
 import { useRef, useState } from "react";
-import { useNavigate } from 'react-router-dom';
-import { loginUser  } from '../Redux/usersSlice';
+import { useNavigate } from 'react-router';
+import { loginUser } from '../Redux/usersSlice';
 import { setLoggedIn, setShowLogine, setShowInscription, setShowProfile } from '../Redux/navbarSlice';
 import { useDispatch, useSelector } from "react-redux";
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const Logine = () => {
   const dispatch = useDispatch();
@@ -54,7 +56,6 @@ const Logine = () => {
         if (loginUser.fulfilled.match(resultAction)) {
           dispatch(setLoggedIn(true));
 
-
           localStorage.setItem('isLoggedIn', 'true');
           dispatch(setShowLogine(false));
           dispatch(setShowInscription(false));
@@ -64,87 +65,94 @@ const Logine = () => {
           setErrorlogine(true);
         }
       } catch (error) {
-        console.log("Error:", error);
         setErrorlogine(true);
       }
     }
   };
 
+  const handleSignup = () => {
+    dispatch(setShowInscription(true));
+    dispatch(setShowLogine(false));
+    dispatch(setShowProfile(false));
+  };
+
+  const handleClose = () => {
+    dispatch(setShowLogine(false));
+  };
+
   return (
-    <>
-      {loading && <div>Loading...</div>}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+      {loading && (
+        <div className="flex items-center justify-center">
+          <span className="h-10 w-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
       {!loading && (
-        <div className="ml-[10%] lg:w-full max-w-xs absolute z-40 lg:ml-[35%] lg:mt-[5%] lg:h-full shadow-zinc-900">
-          <form className="p-[5%] bg-white shadow-md rounded lg:px-10 lg:p-[15%] lg:mb-4">
-            <nav className="flex flex-wrap gap-2">
-              <div></div>
-              <div>
-                <h2 className="font-serif ml-18 text-wheat text-2xl">Log in to <span className="m-0 font-mono">Student</span>Nest</h2>
-              </div>
-            </nav>
-            <div className="lg:mt-16 grid space-y-4">
-              <div className="lg:mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Username</label>
-                <input
-                  name="email"
-                  ref={emailRef}
-                  className={`${errorMessages.email ? "border-red-600" : ""} shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
-                  id="username"
-                  type="text"
-                  placeholder="Username"
-                />
-                {errorMessages.email && <p style={{ color: "red" }}>{errorMessages.email}</p>}
-              </div>
-              <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                <input
-                  ref={passwordRef}
-                  className={`${errorMessages.password ? "border-red-600" : ""} shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline`}
-                  id="password"
-                  type="password"
-                  placeholder="******************"
-                />
-                {errorMessages.password && <p style={{ color: "red" }}>{errorMessages.password}</p>}
-              </div>
-              <a
-                className="inline-block align-baseline font-bold text-sm text-slate-950 hover:text-blue-800"
-                href="https://www.facebook.com/login/identify/?ctx=recover&ars=royal_blue_bar&from_login_screen=0"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Forgot Password?
-              </a>
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={handleSubmit}
-                  className="shadow bg-slate-950 hover:bg-slate-700 focus:shadow-outline focus:outline-none text-white font-bold py-1 px-4 rounded"
-                  type="button"
-                >
-                  Log in
-                </button>
-                <a
-                  className="inline-block align-baseline font-bold text-sm text-blue-800 hover:text-blue-950"
-                  href="https://www.facebook.com/login/identify/?ctx=recover&ars=royal_blue_bar&from_login_screen=0"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Sign up
-                </a>
-              </div>
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="px-8 pt-8 pb-6 bg-gradient-to-br from-indigo-600 to-violet-700 text-white">
+            <button
+              onClick={handleClose}
+              className="absolute ml-[90%] text-white/80 hover:text-white transition-colors"
+              aria-label="Close login"
+            >
+              <FontAwesomeIcon icon={faXmark} className="h-6 w-6" />
+            </button>
+            <h2 className="text-2xl font-bold">
+              Welcome back
+            </h2>
+            <p className="mt-1 text-indigo-100">Log in to <span className="font-mono font-semibold">Student</span>Nest</p>
+          </div>
+          <form className="px-8 py-6 space-y-5">
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
+              <input
+                name="email"
+                ref={emailRef}
+                className={`${errorMessages.email ? "border-red-500" : "border-gray-300"} w-full py-2.5 px-4 rounded-xl border text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all`}
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+              />
+              {errorMessages.email && <p className="mt-1 text-sm text-red-600">{errorMessages.email}</p>}
             </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
+              <input
+                ref={passwordRef}
+                className={`${errorMessages.password ? "border-red-500" : "border-gray-300"} w-full py-2.5 px-4 rounded-xl border text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all`}
+                id="password"
+                type="password"
+                placeholder="••••••••"
+              />
+              {errorMessages.password && <p className="mt-1 text-sm text-red-600">{errorMessages.password}</p>}
+            </div>
+            {errorLogine && (
+              <div className="p-4 rounded-xl bg-orange-50 border-l-4 border-orange-500 text-orange-700" role="alert">
+                <p className="font-bold">Oops!</p>
+                <p className="text-sm">There was an error with your login credentials.</p>
+              </div>
+            )}
+            <button
+              onClick={handleSubmit}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold transition-all shadow-lg"
+              type="button"
+            >
+              Log in
+            </button>
+            <p className="text-center text-sm text-gray-600">
+              Don&apos;t have an account?{" "}
+              <button
+                onClick={handleSignup}
+                className="font-bold text-indigo-600 hover:text-indigo-800"
+                type="button"
+              >
+                Sign up
+              </button>
+            </p>
           </form>
         </div>
       )}
-      {errorLogine && !loading && (
-        <div
-          className="absolute z-50 mb-[15%] ml-[2%] lg:w-[30%] rounded-lg lg:ml-[30%] bg-orange-100 border-l-4 border-orange-500 text-orange-700 lg:p-4"
-          role="alert"
-        >
-          <p className="font-bold">Oops!</p>
-          <p>It seems there was an error with your login credentials</p>
-        </div>
-      )}
-    </>
+    </div>
   );
 };
 

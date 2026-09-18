@@ -4,16 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Wishlist extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'listing_id',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // A favorite belongs to a listing
     public function listing(): BelongsTo
     {
         return $this->belongsTo(Listing::class);

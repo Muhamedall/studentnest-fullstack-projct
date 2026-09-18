@@ -15,32 +15,8 @@ services:
         value: "false"
       - key: APP_KEY
         generateValue: true
-      - key: DB_HOST
-        fromDatabase: studentnest-db
-      - key: DB_DATABASE
-        fromDatabase: studentnest-db
-      - key: DB_USERNAME
-        fromDatabase: studentnest-db
-      - key: DB_PASSWORD
-        fromDatabase: studentnest-db
-
-  - type: worker
-    name: studentnest-worker
-    env: docker
-    repo: https://github.com/Muhamedall/studentnest-fullstack-projct
-    branch: main
-    plan: starter
-    dockerfilePath: Dockerfile.worker     # <— FIXED
-    startCommand: ""                      # Docker CMD will start queue worker
-    envVars:
-      - key: QUEUE_CONNECTION
-        value: database
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: "false"
-      - key: APP_KEY
-        sync: studentnest-web             # uses same APP_KEY
+      - key: DB_CONNECTION
+        value: pgsql
       - key: DB_HOST
         fromDatabase: studentnest-db
       - key: DB_DATABASE
@@ -52,4 +28,5 @@ services:
 
 databases:
   - name: studentnest-db
+    type: postgres
     plan: starter

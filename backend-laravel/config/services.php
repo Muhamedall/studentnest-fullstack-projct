@@ -31,4 +31,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'frontend_success_url' => env('FRONTEND_URL', 'http://localhost:3000').'/payment/success',
+        'frontend_cancel_url' => env('FRONTEND_URL', 'http://localhost:3000').'/payment/cancel',
+    ],
+
 ];

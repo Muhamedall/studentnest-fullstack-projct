@@ -1,34 +1,27 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faUser, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { faBars } from '@fortawesome/free-solid-svg-icons';
+import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { setShowProfile, setShowLogine, setShowInscription, setShowMenuOfuser } from '../Redux/navbarSlice';
 import { logoutUser } from '../Redux/usersSlice';
-import { useNavigate  } from 'react-router-dom';
- 
+
 import Logine from '../Forms/Login';
 import Singup from '../Forms/Singup';
 import logo from './WhatsApp_Image_2024-04-12_at_22.08.25-removebg-preview.png';
 
 const Navbar = () => {
-  const  navigate =useNavigate();
+  const navigate = useNavigate();
   const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const [searchQuery, setSearchQuery] = useState('');
   const showProfile = useSelector((state) => state.navbar.showProfile);
   const showLogine = useSelector((state) => state.navbar.showLogine);
   const showInscription = useSelector((state) => state.navbar.showInscription);
   const showMenuOfuser = useSelector((state) => state.navbar.showMenuOfuser);
-  const numberFavories = useSelector((state)=>state.wishlests.numberFavories);
- 
-  
+  const numberFavories = useSelector((state) => state.wishlests.numberFavories);
+
   const dispatch = useDispatch();
-  useEffect(() => {
-    if (!loggedIn ) {
-      
-    //
-    }
-  }, [loggedIn]);
 
   const handleShow = () => {
     if (loggedIn) {
@@ -39,17 +32,14 @@ const Navbar = () => {
       dispatch(setShowProfile(true));
     }
   };
-  const removeMenuuser=()=>{
-    dispatch(setShowMenuOfuser(false))
-
-  }
-  const removeMenuProfile=()=>{
-    dispatch(setShowProfile(false))
-
-  }
+  const removeMenuuser = () => {
+    dispatch(setShowMenuOfuser(false));
+  };
+  const removeMenuProfile = () => {
+    dispatch(setShowProfile(false));
+  };
 
   const handleLogin = () => {
-    
     dispatch(setShowLogine(true));
     dispatch(setShowProfile(false));
   };
@@ -59,240 +49,211 @@ const Navbar = () => {
     dispatch(setShowProfile(false));
   };
   const handleLogout = () => {
-   
     dispatch(logoutUser())
       .then(() => {
-        localStorage.removeItem('isLoggedIn'); 
+        localStorage.removeItem('isLoggedIn');
         navigate('/');
       })
       .catch((error) => {
         console.error('Logout failed:', error);
       });
-      dispatch(setShowMenuOfuser(false))
+    dispatch(setShowMenuOfuser(false));
   };
-
 
   return (
     <>
-      <header className={ `${showLogine || showInscription  ? "opacity-50 pointer-events-none " : ""} " static flex flex-row  border-b-2  "`}>
-          <div className=' absolute   w-15 lg:ml-3 mt-2  '>
-            <Link to="/" >            <img src={logo} alt="logo" className="w-10 lg:w-20"></img>
-            </Link>
-           
-          </div>
-     
-        
-        <nav className=" ">
-       
-          <div className="Search-bar
-          ml-[45%]
-          mb-3
-          w-[250%]
-          
-         sm:w-[250%]
-         sm:ml-[20%]
-         sm:mb-2
-         sm:p-2
-        
-
-        
-         
-         
-          md:mb-[5%]
-          md:p-2
-         
-          md:ml-[75%]
-          border-gray-400 
-          rounded-full
-          mt:mt-3
-         
-         
-          lg:p-1 
-          flex flex-row lg:ml-[50%] 
-          lg:shadow-xl border
-          
-           lg:border-gray-400 
-         
-            lg:w-[210%] mt-3
-            
-            ">
-
-          <div className=" flex flex-col 
-          rounded-full 
-          
-          cursor-pointer group hover:bg-gray-100  lg:w-[30%]   ">
-  <div>
-    <label className=" absolute mt-2 ml-5 cursor-pointer text-xs  sm:mt-2  md:text-xl md:mt-[10px] md:ml-5   lg:text-sm font-medium lg:ml-10 lg:mt-[8px] ">Where</label>
-  </div>
-  <div className="relative hidden  lg:inline-block    ">
-    <input 
-      className=" 
-    
-       md:placeholder:text-xl
-       
-      
-      
-     
-       lg:mt-[10%]
-       lg:ml-10 
-       lg:focus:outline-none rounded-full 
-       lg:text-xs 
-       lg:font-medium 
-       bg-transparent 
-       
-       lg:placeholder:text-sm 
-       lg:placeholder:font-normal "
-      type="text"
-      placeholder='Search destination'
-    />
-    
-  </div>
-</div>
-
-            <div className="flex flex-col   rounded-full hover:bg-gray-100 cursor-pointer w-[30%] ">
-              
-              <label  className=' ml-[120%] mt-2 text-xs cursor-pointer md:text-xl md:mt-2   lg:text-sm font-medium lg:ml-5 lg:mt-2  '>Who</label>
-             
-          
-
-            <span className=" hidden lg:inline-block  text-slate-500 lg:text-sm lg:ml-5  ">Add guest</span>
+      <header
+        className={`${showLogine || showInscription ? "opacity-60 pointer-events-none" : ""} sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20 gap-4">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Link to="/">
+                <img src={logo} alt="logo" className="h-12 w-auto" />
+              </Link>
             </div>
-            <div className="flex flex-col rounded-full  hover:bg-gray-100 cursor-pointer w-[30%] ">
-            <label className='  ml-[100%] mt-2 text-xs md:text-xl md:mt-2   lg:text-sm font-medium lg:ml-5 lg:mt-2 '>Price</label>
-           <span className="hidden lg:inline-block   text-slate-500 text-sm ml-5">Price ranking</span>
-           </div>
-           <div className='' >
-           <button className="w-25 h-25 ml-[105%] p-0 bg-slate-950 border-2 borde rounded-full w-[100%] h-[100%]  text-slate-50  hover:bg-gray-500  lg:p-3 mr-5 lg:mr-[15%]  "><FontAwesomeIcon icon={faSearch}  className=" lg:w-[100%] "/></button>
-           </div>
-            
-           <div className=" text-center absolute grid grid-cols-3
-           lg:gap-12
-           ml-[75%]
-           
-           lg:w-[6%]
-           lg:h-[6%]
-          
-            
-          
-            sm:ml-[83%]
-            md:mb-[5%]
-            md:ml-[75%]
-            
-            
-            
-          
-            
-          
-            lg:p-3 
-            
-            lg:ml-[70%] 
-            lg:mt-[5px] 
-            lg:border 
-            lg:border-x-2 lg:rounded-full 
-            
-            hover:shadow-xl 
-            cursor-pointer " onClick={handleShow} >
-           <FontAwesomeIcon className='ml-2'   icon={faBars} />
-        <FontAwesomeIcon  className="hidden lg:inline-block"  icon={faUser}/>
-        </div>
-        
-          </div>
-         
-        </nav>
-       
-        {showProfile ? (
-        
-        <div className="absolute z-40  mt-[10%] py-2 ml-[60%]   rounded border bg-slate-50 lg:w-[20%] lg:py-5    lg:ml-[70%] lg:mt-[5%] shadow-xl shadow-slate-200 ">
-                   <button className='ml-[85%]' onClick={removeMenuProfile} ><svg  xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg></button>
 
-          <div className="rounded overflow-hidden ">
-            <div className="  ">
-              <ul className='flex flex-col '>
-                <li className='p-2 hover:bg-white font-medium cursor-pointer ' >
-                
+            {/* Search */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                navigate('/?search=' + encodeURIComponent(searchQuery.trim()));
+              }}
+              className="flex items-center flex-1 max-w-xl mx-2 sm:mx-6 rounded-full border border-gray-300 shadow-sm hover:shadow-md transition-shadow px-3 sm:px-4 py-2 gap-2"
+            >
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by title or city..."
+                aria-label="Search listings"
+                className="flex-1 min-w-0 bg-transparent text-sm text-gray-800 focus:outline-none placeholder:text-gray-400"
+              />
+              <button
+                type="submit"
+                className="flex-shrink-0 bg-slate-950 hover:bg-slate-700 text-white rounded-full p-2 transition-all"
+                aria-label="Search"
+              >
+                <FontAwesomeIcon icon={faSearch} className="h-3.5 w-3.5" />
+              </button>
+            </form>
 
-               <button onClick={handleLogin}>Log in</button>
-                
-                  </li>
-                  <li  className='p-2 hover:bg-white border-b  cursor-pointer '>
-                  <button onClick={handelInscription}>Sing up</button>
-                  </li>
-                  <li  className='p-2 mt-2 hover:bg-white cursor-pointer '>
-                    <a className="#">Help Center</a> 
-                  </li>
-                 
-               
-              </ul>
-              
-              
+            {/* Right side */}
+            <div className="flex items-center gap-4">
+              {loggedIn ? (
+                <Link
+                  to="/Dashboard"
+                  className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-slate-950 hover:bg-gray-100 px-4 py-2 rounded-full transition-colors"
+                >
+                  Become a host
+                </Link>
+              ) : (
+                <>
+                  <button
+                    onClick={handelInscription}
+                    className="text-sm font-semibold text-gray-700 hover:text-slate-950 hover:bg-gray-100 px-4 py-2 rounded-full transition-colors"
+                  >
+                    Sign up
+                  </button>
+                  <button
+                    onClick={handleLogin}
+                    className="text-sm font-semibold text-white bg-slate-950 hover:bg-slate-700 px-4 py-2 rounded-full transition-colors"
+                  >
+                    Log in
+                  </button>
+                </>
+              )}
+
+              {/* User menu trigger */}
+              <button
+                onClick={handleShow}
+                className="flex items-center gap-2 rounded-full border border-gray-300 shadow-sm hover:shadow-md px-3 py-2 transition-all"
+                aria-label="User menu"
+              >
+                <FontAwesomeIcon icon={faBars} className="text-gray-600" />
+                <span className="h-6 w-px bg-gray-300 hidden sm:block" />
+                <FontAwesomeIcon icon={faUser} className="hidden sm:inline-block text-gray-600" />
+              </button>
             </div>
-           
-            
           </div>
         </div>
-        
-     
-    ) : null}
-        
-        {showMenuOfuser ? (
-          
-        <div className="absolute z-40 mt-[15%] py-2 ml-[60%]  rounded border bg-slate-50 lg:w-[20%] lg:py-5 lg:ml-[70%] lg:mt-[5%] shadow-xl shadow-slate-200 ">
-         <button className='ml-[85%]' onClick={removeMenuuser} ><svg  xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000000"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg></button>
-         <div className="rounded overflow-hidden ">
-            <div className=" ">
-              <ul className='flex flex-col '>
-                <li className='p-2 hover:bg-white font-medium cursor-pointer ' >
-                
 
-             <Link to="Account" > Account</Link>
-                
-                  </li>
-                  <li className='p-2 hover:bg-white font-medium cursor-pointer ' >
-                
-                  <Link to="Dashboard" > Manage my listings</Link>
-               
-                
-                  </li>
-                  <li className='p-2 static hover:bg-white font-medium cursor-pointer ' >
-                
-
-               
-                  <Link to="Wishlest" >
-  Wishlist 
-  <span className={`${numberFavories.length === 0 ? ' hidden' :'bg-red-600 absolute text-gray-50  w-[5%] h-[5%] text-center text-sm ml-[7px] mt-[5px] rounded-full'}`}>
-    {numberFavories}
-  </span>
-</Link>
-
-                
-                  </li>
-                  <li className='p-2 hover:bg-white border-b font-medium cursor-pointer ' >
-                
-
-                   <button >Messages</button>
-                
-                  </li>
-                  <li  className='p-2 mt-2 hover:bg-white   cursor-pointer '>
-                  <button >Help Center</button>
-                  </li>
-                  <li  className='p-2 mt-2 hover:bg-white cursor-pointer '>
-                 <button onClick={handleLogout}>  Log out </button>
-                  </li>
-                 
-               
-              </ul>
-              
-              
-            </div>
-           
-            
+        {/* Guest dropdown */}
+        {showProfile && (
+          <div className="absolute right-4 top-20 mt-2 w-64 rounded-2xl bg-white border border-gray-100 shadow-xl p-2 z-50">
+            <button
+              onClick={removeMenuProfile}
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-700"
+              aria-label="Close"
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+            <ul className="mt-6">
+              <li>
+                <button
+                  onClick={handleLogin}
+                  className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                >
+                  Log in
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={handelInscription}
+                  className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                >
+                  Sign up
+                </button>
+              </li>
+              <li>
+                <Link
+                  to="HelpCenter"
+                  onClick={removeMenuProfile}
+                  className="block px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Help Center
+                </Link>
+              </li>
+            </ul>
           </div>
-        </div>
-      ) : null}
+        )}
+
+        {/* Logged-in dropdown */}
+        {showMenuOfuser && (
+          <div className="absolute right-4 top-20 mt-2 w-72 rounded-2xl bg-white border border-gray-100 shadow-xl p-2 z-50">
+            <button
+              onClick={removeMenuuser}
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-700"
+              aria-label="Close"
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+            <ul className="mt-6 space-y-0.5">
+              <li>
+                <Link
+                  to="Account"
+                  onClick={removeMenuuser}
+                  className="block px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                >
+                  Account
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="Dashboard"
+                  onClick={removeMenuuser}
+                  className="block px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                >
+                  Manage my listings
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="Wishlest"
+                  onClick={removeMenuuser}
+                  className="flex items-center px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                >
+                  Wishlist
+                  {numberFavories > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center min-w-6 h-6 px-1.5 bg-gradient-to-r from-rose-500 to-red-600 text-white text-xs font-bold rounded-full">
+                      {numberFavories}
+                    </span>
+                  )}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="Messages"
+                  onClick={removeMenuuser}
+                  className="block px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Messages
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="HelpCenter"
+                  onClick={removeMenuuser}
+                  className="block px-4 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Help Center
+                </Link>
+              </li>
+              <li className="pt-2 mt-1 border-t border-gray-100">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                >
+                  Log out
+                </button>
+              </li>
+            </ul>
+          </div>
+        )}
       </header>
       {showLogine ? <Logine /> : null}
       {showInscription ? <Singup /> : null}
-      
     </>
   );
 };

@@ -2,43 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Models\Wishlist;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Wishlist; 
 
 class WishlistController extends Controller
 {
-    public function addFavorite(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = Auth::user();
+        $favorites = Wishlist::where('user_id', $request->user()->id)
+            ->with('listing.user')
+            ->latest()
+            ->get();
 
-        $wishlist = Wishlist::create([
-            'user_id' => $user->id,
-            'listing_id' => $request->listing_id,
+        return response()->json($favorites);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'listing_id' => 'required|integer|exists:listings,id',
         ]);
 
-        return response()->json($wishlist, 201);
+        $wishlist = Wishlist::firstOrCreate([
+            'user_id' => $request->user()->id,
+            'listing_id' => $validated['listing_id'],
+        ]);
+
+        return response()->json($wishlist->load('listing'), 201);
     }
 
-    public function removeFavorite(Request $request)
+    public function destroy(Request $request, int $listingId): JsonResponse
     {
-        $user = Auth::user();
-
-        Wishlist::where('user_id', $user->id)
-            ->where('listing_id', $request->listing_id)
+        Wishlist::where('user_id', $request->user()->id)
+            ->where('listing_id', $listingId)
             ->delete();
 
-        return response()->json(['message' => 'Favorite removed'], 200);
-    }
-
-    public function getFavorites()
-    {
-        $user = Auth::user();
-        if (!$user) { 
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $favorites = Wishlist::where('user_id', $user->id)->with('listing')->get();
-        return response()->json($favorites, 200);
+        return response()->json(['message' => 'Favorite removed']);
     }
 }

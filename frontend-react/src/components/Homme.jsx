@@ -1,38 +1,40 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { addWishlest, removeWishlest ,initializeWishlest } from './Redux/wishlestSlice';
+import { Link, useSearchParams } from 'react-router';
+import axios from '../api/api';
+import { STORAGE_URL } from '../api/api';
+import { addWishlistItem, removeWishlistItem, fetchWishlist } from './Redux/wishlestSlice';
+import { formatPrice } from '../utils/formatPrice';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import SwiperCore, { Navigation, Pagination, Keyboard, Mousewheel } from 'swiper';
+import { Navigation, Pagination, Keyboard, Mousewheel } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/keyboard';
 import 'swiper/css/mousewheel';
 
-SwiperCore.use([Navigation, Pagination, Keyboard, Mousewheel]);
-
 const ImageGallery = () => {
     const [listings, setListings] = useState([]);
     const showLogine = useSelector((state) => state.navbar.showLogine);
     const showInscription = useSelector((state) => state.navbar.showInscription);
-    const favories = useSelector((state) => state.wishlests.favories || []); 
+    const favories = useSelector((state) => state.wishlests.favories || []);
     const user = useSelector((state) => state.users.user);
     const dispatch = useDispatch();
+    const [searchParams] = useSearchParams();
+    const searchQuery = (searchParams.get('search') || '').trim().toLowerCase();
 
     useEffect(() => {
         if (user) {
-            dispatch(initializeWishlest(user.id));
+            dispatch(fetchWishlist());
         }
     }, [user, dispatch]);
 
     useEffect(() => {
-        axios.get('http://localhost:8000/api/dataListings')
+        axios.get('/api/dataListings')
             .then(response => {
                 const data = response.data.map(listing => ({
                     ...listing,
-                    images: JSON.parse(listing.images.replace(/\\/g, ''))
+                    images: Array.isArray(listing.images) ? listing.images : JSON.parse(listing.images.replace(/\\/g, ''))
                 }));
                 setListings(data);
             })
@@ -41,59 +43,129 @@ const ImageGallery = () => {
             });
     }, []);
 
-    const baseUrl = 'http://localhost:8000/storage/';
-
     const handleFavorite = (listing) => {
-        if (!user) return; // Handle the case where the user is not logged in
-    
+        if (!user) return;
+
         const isFavorite = Array.isArray(favories) && favories.some(item => item.id === listing.id);
         if (isFavorite) {
-            dispatch(removeWishlest({ userId: user.id, itemId: listing.id }));
+            dispatch(removeWishlistItem(listing.id));
         } else {
-            dispatch(addWishlest({ userId: user.id, item: { ...listing, image: `${baseUrl}${listing.images[0]}` } }));
+            dispatch(addWishlistItem(listing.id));
         }
     };
-    
+
+    const isFavorite = (id) => Array.isArray(favories) && favories.some(item => item.id === id);
+
+    const filteredListings = searchQuery
+        ? listings.filter(listing =>
+            `${listing.title} ${listing.location}`.toLowerCase().includes(searchQuery)
+          )
+        : listings;
 
     return (
-        <div className={`${showLogine || showInscription ? "opacity-50 pointer-events-none " : ""} static lg:h-screen lg:grid lg:grid-cols-4 gap-2 lg:mt-[2%] lg:ml-[3%]`}>
-            {listings.map(listing => (
-                <Link to={`/DetailesListing/${listing.title}`} key={listing.id}>
-                    <div className="">
-                        <Swiper
-                            className="mt-[7%] w-[80%] h-[90%] lg:h-[35%] lg:w-[80%] rounded-lg"
-                            modules={[Navigation, Pagination, Keyboard, Mousewheel]}
-                            navigation
-                            pagination
-                            keyboard
-                            mousewheel
-                            cssMode
-                        >
-                            {listing.images.map((image, index) => (
-                                <SwiperSlide key={index} className="static">
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        onClick={(e) => { e.preventDefault(); handleFavorite(listing) }}  className="absolute h-[30px] w-[30px] ml-[82%] mt-[5px] transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300 " viewBox="0 -960 960 960" fill={Array.isArray(favories) && favories.some(item => item.id === listing.id) ? "#75FB4C" : "#FFFFFF"}>
-                                        {(Array.isArray(favories) && favories.some(item => item.id === listing.id)) ?
-                                            <path  d="M718-313 604-426l57-56 57 56 141-141 57 56-198 198ZM440-501Zm0 381L313-234q-72-65-123.5-116t-85-96q-33.5-45-49-87T40-621q0-94 63-156.5T260-840q52 0 99 22t81 62q34-40 81-62t99-22q81 0 136 45.5T831-680h-85q-18-40-53-60t-73-20q-51 0-88 27.5T463-660h-46q-31-45-70.5-72.5T260-760q-57 0-98.5 39.5T120-621q0 33 14 67t50 78.5q36 44.5 98 104T440-228q26-23 61-53t56-50l9 9 19.5 19.5L605-283l9 9q-22 20-56 49.5T498-172l-58 52Z" /> :
-                                            <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/>
-                                        }
+        <div className={`${showLogine || showInscription ? "opacity-50 pointer-events-none " : ""} max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10`}>
+            <div className="mb-8">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                    {searchQuery ? `Results for "${searchQuery}"` : 'Find your perfect student home'}
+                </h1>
+                <p className="mt-2 text-gray-600">
+                    {searchQuery
+                        ? `${filteredListings.length} listing${filteredListings.length === 1 ? '' : 's'} found.`
+                        : 'Affordable, safe and conveniently located accommodations near your campus.'}
+                </p>
+            </div>
+            {filteredListings.length === 0 && searchQuery ? (
+                <div className="py-16 text-center">
+                    <p className="text-gray-600 text-lg">No listings match your search.</p>
+                    <Link
+                        to="/"
+                        className="inline-block mt-4 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold rounded-xl transition-all"
+                    >
+                        Clear search
+                    </Link>
+                </div>
+            ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredListings.map(listing => (
+                    <Link to={`/DetailesListing/${listing.title}`} key={listing.id} className="group">
+                        <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                            <div className="relative">
+                                <Swiper
+                                    className="w-full aspect-[4/3]"
+                                    modules={[Navigation, Pagination, Keyboard, Mousewheel]}
+                                    navigation
+                                    pagination={{ clickable: true }}
+                                    keyboard
+                                    mousewheel
+                                >
+                                    {listing.images.map((image, index) => (
+                                        <SwiperSlide key={index}>
+                                            <img
+                                                src={`${STORAGE_URL}${image}`}
+                                                alt={`Listing ${listing.id} Image ${index + 1}`}
+                                                loading={index === 0 ? 'eager' : 'lazy'}
+                                                decoding="async"
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                        </SwiperSlide>
+                                    ))}
+                                </Swiper>
+
+                                {/* Favorite button */}
+                                <button
+                                    onClick={(e) => { e.preventDefault(); handleFavorite(listing); }}
+                                    className="absolute top-3 right-3 z-10 flex items-center justify-center h-9 w-9 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all"
+                                    aria-label="Toggle favorite"
+                                >
+                                    <svg
+                                        className="h-5 w-5"
+                                        viewBox="0 -960 960 960"
+                                        fill={isFavorite(listing.id) ? "#e11d48" : "none"}
+                                        stroke={isFavorite(listing.id) ? "#e11d48" : "#111827"}
+                                        strokeWidth="45"
+                                    >
+                                        <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z" />
                                     </svg>
-                                    <img
-                                        src={`${baseUrl}${image}`}
-                                        alt={`Listing ${listing.id} Image ${index + 1}`}
-                                    />
-                                </SwiperSlide>
-                            ))}
-                        </Swiper>
-                        <div className="ml-[10%]">
-                            <h2 className="font-bold">{listing.title}</h2>
-                            <p className="text-gray-400">Maroc ,{listing.location}</p>
-                            <p>Owner: {listing.user.name}</p>
-                            <p className="font-bold">{listing.price.slice(0, -3)} MAD</p>
+                                </button>
+
+                                {/* Owner badge */}
+                                <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm">
+                                    <span className="h-6 w-6 flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-[10px] font-bold">
+                                        {(listing.user?.name || 'U').charAt(0).toUpperCase()}
+                                    </span>
+                                    <span className="text-xs font-semibold text-gray-800 truncate max-w-[120px]">
+                                        {listing.user?.name}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="p-4">
+                                <div className="flex items-start justify-between gap-2">
+                                    <h2 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors truncate">
+                                        {listing.title}
+                                    </h2>
+                                </div>
+                                <p className="mt-1 text-sm text-gray-500 flex items-center gap-1">
+                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                                    </svg>
+                                    {listing.location}
+                                </p>
+                                <div className="mt-3 flex items-center justify-between">
+                                    <span className="text-lg font-bold text-slate-950">
+                                        {formatPrice(listing.price)} <span className="text-sm font-semibold text-gray-500">MAD</span>
+                                    </span>
+                                    <span className="text-xs font-medium text-gray-500">
+                                        {listing.rooms} rooms · {listing.people} guests
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </Link>
-            ))}
+                    </Link>
+                ))}
+            </div>
+            )}
         </div>
     );
 };

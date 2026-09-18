@@ -27,6 +27,7 @@ export const logoutUser = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await axios.post('/api/logout');
+      localStorage.removeItem('token');
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('user');
       return response.data;
@@ -43,6 +44,7 @@ export const loginUser = createAsyncThunk(
       const response = await axios.post("/api/login", { email, password });
       const userData = response.data;
 
+      localStorage.setItem('token', userData.token);
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('user', JSON.stringify(userData.user));
 
