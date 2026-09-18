@@ -244,14 +244,53 @@ Result: `npm audit` → **0 vulnerabilities** (was 5).
 - `php artisan test`: **53 passed (140 assertions)** — no regressions.
 - `npm run lint`: clean. No frontend build changes required (Login.jsx only).
 
-### Remaining phases (8-9) — not done
-- **Phase 8**: #27 `dataListings/{title}` route ambiguity (also matches `/DetailesListing/:title` frontend contract) + JSON images cast; #32 navbar search cosmetic; #16 title-based lookup non-determinism.
-- **Phase 9**: Laravel 10→12 migration when justified (clears #47), final full smoke test through UI (`php artisan serve` + `npm run dev`), optional: wire password-reset UI + real SMTP (#3), object storage for images (#9).
+### Remaining phases (9-10) — not done
+- **Phase 9**: #27 `dataListings/{title}` route ambiguity (also matches `/DetailesListing/:title` frontend contract — JSON images cast already fixed in Phase 2) + #16 title-based lookup non-determinism. (#32 navbar search completed in Phase 8 above.)
+- **Phase 10**: Laravel 10→12 migration when justified (clears #47), final full smoke test through UI (`php artisan serve` + `npm run dev`), optional: wire password-reset UI + real SMTP (#3), object storage for images (#9), Stripe webhook integration tests (ROADMAP R5).
 
-### TODO_REMAINING.md — decisions now settled (Phase 7)
+### Phase 8 — Payments, messaging, ratings & platform completion (2026-09-17, commit `RF1:project`)
+
+**New feature work (not part of the original issue list — scoped requests)**
+
+| Area | What was built | Files |
+|------|----------------|-------|
+| **Stripe payments (test mode)** | `checkout` (Checkout Session; 404/422 self-booking/503 if unconfigured; date-range vs listing availability), `webhook` (signature-verified; marks payment+reservation paid on `checkout.session.completed`), `index`, `earnings`; `payments` table | PaymentController.php, routes, migration 000001, Payment model, DetailesListing.jsx, PaymentSuccess.jsx, PaymentCancel.jsx (routes `payment/success` & `payment/cancel`) |
+| **Ratings** | `ratings` table (unique listing+user), upsert `store`, `index` returns average/count/my_rating | RatingController.php, migration 000002, Rating model, DetailesListing.jsx |
+| **Threaded comments** | `comments.parent_id` self-FK (separate migration 000005 for existing DBs), nested `replies` in `index`, reply UI | migration 000005, CommentController.php, Comment model, ViewComments.jsx |
+| **Messages** | `messages` table; conversations (`index`, unread counts), thread + mark-read (`show`), `store`; `/Messages` page (`?user=` deep link) | MessageController.php, migration 000003, Message model, Messages.jsx |
+| **Help Center** | FAQ page + contact form → posts message to receiver 1 | HelpCenter.jsx, route in App.jsx |
+| **Dashboard** | `GET /api/dashboard-stats` (owner-relative: listings, reservations, pending, comments, wishlist, revenue from paid payments, paid reservations, my reservations, unread messages); responsive stat cards | DashboardController.php, Dashboard.jsx |
+| **Account page** | Tabs: Personal info (PUT /api/user/profile), Login & security (PUT /api/user/password — 422 on wrong current password), Payments & reservations (GET /api/payments) | Account.jsx, UserController (already present), payment endpoints |
+| **Navbar search** | Single text input → `/?search=` → Homme filters by title+location with results header + empty state | Navbar.jsx, Homme.jsx |
+| **Image performance** | `loading="lazy"` + `decoding="async"` on home/detail/wishlist images (dev images served via `artisan serve` are slow ~600ms) | Homme.jsx, Wishlest.jsx, DetailesListing.jsx |
+
+**Configuration / integration decisions**
+- Stripe vars added to `.env.example` + `config/services.php` stripe block (`frontend_success_url` / `frontend_cancel_url` built from `FRONTEND_URL`). Keys intentionally empty — checkout 503s gracefully until sandbox keys set.
+- `stripe/stripe-php ^21.3` added to composer.json.
+- Stripe CLI authorized for sandbox environment **Quvio · sandbox** (acct_1TGRlB034q7CkYD6); local webhook relay: `stripe listen --forward-to localhost:8000/api/stripe/webhook`; test card `4242 4242 4242 4242`.
+- Demo student `student2@test.com` / `123456789` (id 13) seeded so the owner's listings can be booked/rated/messaged by a different user.
+
+**Known gaps introduced/documented (NOT fixed — product decisions pending)**
+- Currency: UI shows **MAD**, Stripe charges **USD** (`PaymentController` `currency => 'usd'`, `unit_amount = price*100`). Documented → ROADMAP R7.
+- Help Center receiver hardcoded (user 1) — configurable later (ROADMAP R4).
+- No email/notification on payment (EMAILS.md) — requires SMTP (TODO #3).
+- Stripe webhook & payment paths not yet covered by PHPUnit (manual smoke only) → ROADMAP R5.
+
+**Verification (Phase 8)**
+- `php artisan test`: **53 passed (140 assertions)** — no regressions.
+- `npm run lint`: clean. `npm run build`: succeeds (chunk-size warning benign).
+- Live smoke on `php artisan serve` (SQLite): login, dashboard-stats keys, rating upsert, comments + replies (parent_id), messages conversation + mark-read, checkout → **503 graceful** (keys empty), password change 422 on wrong current, profile update multipart, logout. All OK.
+- Vite dev modules (Messages, HelpCenter, Dashboard, Account, DetailesListing, App, PaymentSuccess/Cancel, Navbar, Homme) all served 200.
+
+### Documentation deliverable (final pass)
+- Rewrote root `README.md` (26-section entry point), added `docs/*.md` (architecture, API, database, auth, payments, emails, frontend, backend, docker, security, testing, troubleshooting, development, interview notes, known limitations, roadmap), added `CHANGELOG.md`. All docs reflect the **actual** codebase (Postgres profile, SQLite local, test-mode payments, no email system, no frontend tests, USD-vs-MAD note).
+
+### TODO_REMAINING.md — decisions now settled (Phase 7/8)
 | # | Item | Outcome |
 |---|------|---------|
 | 1 | Email verification enforcement | **Not enforced** (deferred) — no SMTP available |
 | 4 | Local DB | **SQLite** approved for dev/test (reversible override) |
 | 5 | Forgot-password facebook links | **Fixed** — dropped dead link, Sign up opens real form |
 | 7 | `Etudiant` parallel table | **Removed** in Phase 5 (verified no references) |
+| 2 | Fake payment form | **Superseded** — real Stripe Checkout flow implemented (test mode) |
+| 8 | Navbar search cosmetic | **Wired** — single input filters listings by title+location via `?search=` |
